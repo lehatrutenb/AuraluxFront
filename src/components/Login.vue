@@ -43,14 +43,23 @@
                     text-decoration underline
     .vs-button
         margin 0px
+    .center
+        position absolute
+        z-index 0
+        min-height 100vh
+        min-width 100vw
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
 </style>
 
 <template>
-    <div class="center">
-        <vs-dialog v-model="active">
+    <div class="center" :style="
+    { backgroundImage: 'url(' + require('../assets/space.jpg') + ')'}">
+        <vs-dialog v-model="active" not-close prevent-close blur>
             <template #header>
                 <h4 class="not-margin">
-                    Welcome to <b>Aeralux</b>
+                    Welcome to <b>Auralux</b>
                 </h4>
             </template>
 
