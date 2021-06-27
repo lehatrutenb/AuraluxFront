@@ -64,7 +64,7 @@
             </template>
 
             <div class="con-form">
-                <vs-input v-model="text" placeholder="Login">
+                <vs-input type="text" v-model="login" placeholder="Login">
                     <template #icon>
                         <i class='bx bxs-user-account'></i>
                     </template>
@@ -86,7 +86,7 @@
 
             <template #footer>
                 <div class="footer-dialog">
-                    <vs-button block>
+                    <vs-button v-on:click="post_req" block>
                         Sign In
                     </vs-button>
 
@@ -103,9 +103,20 @@
     export default {
         data:() => ({
             active: true,
-            email: '',
+            login: '',
             password: '',
             remember: false
-        })
+        }),
+        methods: {
+            post_req: function(event) {
+                await axios.post("/users/login", {}, {
+                    auth: {
+                        username: login,
+                        password: password,
+                        remember: remember
+                    }
+                });
+            }
+        }
     }
 </script>

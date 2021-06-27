@@ -1,10 +1,16 @@
 import Vue from 'vue'
 import App from './App.vue'
-import Router from 'vue-router'
+
 import Vuesax from 'vuesax'
 import 'vuesax/dist/vuesax.css'
+
 import 'boxicons'
 import 'boxicons/css/boxicons.min.css'
+
+import axios from 'axios'
+import VueAxios from 'vue-axios'
+
+import Router from 'vue-router'
 import Login from '@/components/Login'
 import BattleView from '@/components/BattleView'
 import BattleInfo from '@/components/BattleInfo'
