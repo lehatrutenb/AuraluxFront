@@ -108,13 +108,12 @@
             remember: false
         }),
         methods: {
-            post_req: function(event) {
-                await axios.post("/users/login", {}, {
+            post_req: async function() {
+                await this.axios.post("http://127.0.0.1:8080/users/login", {remember: this.remember}, {
                     auth: {
-                        username: login,
-                        password: password,
-                        remember: remember
-                    }
+                        username: this.login,
+                        password: this.password,
+                    },
                 });
             }
         }

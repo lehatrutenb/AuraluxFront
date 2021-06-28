@@ -19,6 +19,7 @@ import Maps from '@/components/Maps'
 import Strategies from '@/components/Strategies'
 
 Vue.use(Router)
+Vue.use(VueAxios, axios)
 Vue.use(Vuesax)
 Vue.config.productionTip = false
 
