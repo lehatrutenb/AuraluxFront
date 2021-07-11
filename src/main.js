@@ -7,6 +7,8 @@ import 'vuesax/dist/vuesax.css'
 import 'boxicons'
 import 'boxicons/css/boxicons.min.css'
 
+import VueCookies from 'vue-cookies'
+
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 
@@ -17,10 +19,13 @@ import BattleInfo from '@/components/BattleInfo'
 import Battles from '@/components/Battles'
 import Maps from '@/components/Maps'
 import Strategies from '@/components/Strategies'
+import MainPage from '@/components/MainPage'
 
 Vue.use(Router)
 Vue.use(VueAxios, axios)
 Vue.use(Vuesax)
+
+Vue.use(VueCookies)
 Vue.config.productionTip = false
 
 const router = new Router({
@@ -30,7 +35,8 @@ const router = new Router({
       { path: '/battle/:battle_id/', component: BattleInfo },
       { path: '/battles', component: Battles },
       { path: '/maps', component: Maps },
-      { path: '/strategies', component: Strategies }
+      { path: '/strategies', component: Strategies },
+      { path: '/main_page', component: MainPage }
   ]
 })
 

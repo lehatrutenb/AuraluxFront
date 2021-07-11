@@ -54,48 +54,50 @@
 </style>
 
 <template>
-    <div class="center" :style="
-    { backgroundImage: 'url(' + require('../assets/space.jpg') + ')'}">
-        <vs-dialog v-model="active" not-close prevent-close blur>
-            <template #header>
-                <h4 class="not-margin">
-                    Welcome to <b>Auralux</b>
-                </h4>
-            </template>
+    <div>
+        <div class="center" :style="
+        { backgroundImage: 'url(' + require('../assets/space.jpg') + ')'}">
+            <vs-dialog v-model="active" not-close prevent-close blur>
+                <template #header>
+                    <h4 class="not-margin">
+                        Welcome to <b>Auralux</b>
+                    </h4>
+                </template>
 
-            <div class="con-form">
-                <vs-input type="text" v-model="login" placeholder="Login">
-                    <template #icon>
-                        <i class='bx bxs-user-account'></i>
-                    </template>
-                </vs-input>
-                <vs-input type="password" v-model="password" placeholder="Password">
-                    <template #icon>
-                        <i class='bx bxs-lock'></i>
-                    </template>
-                </vs-input>
-                <div class="flex">
-                    <vs-checkbox v-model="remember">
-                        Remember me
+                <div class="con-form">
+                    <vs-input type="text" v-model="login" placeholder="Login">
                         <template #icon>
-                            <i class='bx bxs-planet' ></i>
+                            <i class='bx bxs-user-account'></i>
                         </template>
-                    </vs-checkbox>
-                </div>
-            </div>
-
-            <template #footer>
-                <div class="footer-dialog">
-                    <vs-button v-on:click="post_req" block>
-                        Sign In
-                    </vs-button>
-
-                    <div class="new">
-                        New Here? <a href="#">@lehatrutenb</a>
+                    </vs-input>
+                    <vs-input type="password" v-model="password" placeholder="Password">
+                        <template #icon>
+                            <i class='bx bxs-lock'></i>
+                        </template>
+                    </vs-input>
+                    <div class="flex">
+                        <vs-checkbox v-model="remember">
+                            Remember me
+                            <template #icon>
+                                <i class='bx bxs-planet' ></i>
+                            </template>
+                        </vs-checkbox>
                     </div>
                 </div>
-            </template>
-        </vs-dialog>
+
+                <template #footer>
+                    <div class="footer-dialog">
+                        <vs-button v-on:click="post_req" block>
+                            Sign In
+                        </vs-button>
+
+                        <div class="new">
+                            New Here? <a href="#">@lehatrutenb</a>
+                        </div>
+                    </div>
+                </template>
+            </vs-dialog>
+        </div>
     </div>
 </template>
 
@@ -105,16 +107,41 @@
             active: true,
             login: '',
             password: '',
-            remember: false
+            remember: false,
+            textarea: '',
+            ErrorMsg: false
         }),
         methods: {
+            openNotification(position = null, color) {
+                this.$vs.notification({
+                    sticky: true,
+                    color,
+                    position,
+                    title: 'Something went wrong',
+                    text: 'Check corectness of your login and password'
+                })
+            },
             post_req: async function() {
                 await this.axios.post("http://127.0.0.1:8080/users/login", {remember: this.remember}, {
                     auth: {
                         username: this.login,
                         password: this.password,
                     },
-                });
+                }).then((response) => {
+                    if (!this.remember) {
+                        this.$cookies.set('SessionToken', response.data['token'], '1h');
+                    } else {
+                        this.$cookies.set('SessionToken', response.data['token'], '1m');
+                    }
+                    this.$router.push('main_page');
+                }, (error) => {
+                    console.log(error);
+                    this.error = '';
+                    this.password = '';
+                    this.login = '';
+                    this.ErrorMsg = true;
+                    this.openNotification('top-left', 'danger');
+                }); 
             }
         }
     }
