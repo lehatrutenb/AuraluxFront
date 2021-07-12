@@ -111,6 +111,9 @@
                     text: text
                 })
             },
+            Pass(Param) {
+                return Param;
+            },
             SetFirtDraw() {
                 if (this.DrawInterwal == null) {
                     this.DrawInterwal = setInterval(this.SetFirtDraw, 50);
@@ -143,8 +146,7 @@
                         }
                     }
                 } finally {
-                    const pass = () => {};
-                    pass();
+                    this.Pass(null);
                 }
             },
             async GetMaps() {
@@ -301,14 +303,12 @@
                     }
                 })
                 .then(response => {
-                    const pass = (response) => {return response};
-                    pass(response);
+                    this.Pass(response);
 
                     this.Clear(false);
                     this.GetMaps();
                 }).catch(error => {
-                    const pass = (error) => {return error};
-                    pass(error);
+                    this.Pass(error);
                     this.Clear(false);
                     this.openNotification('top-left', 'danger', 'Check if your map name is correct');
                 });
