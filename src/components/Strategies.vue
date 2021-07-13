@@ -12,7 +12,7 @@
         <vs-dialog v-if="ShowComments" overflow-hidden blur scroll auto-width v-model="ShowComments">
             <template #header>
             <h3>
-                Compiller comments
+                Compilation comments
             </h3>
             </template>
             <div class="con-content">
@@ -54,11 +54,10 @@
             </template>
         </vs-navbar>
         <div style="padding:80px 30px 30px 50px" v-if="page_now == 'strategies'">
-            <vs-button style="display: inline-block" size="xl" gradient @click="SubmitStrategy()">
-                Load strategy
+            <input id="UploadStrategy" type="file" hidden>
+            <vs-button style="display: inline-block" size="xl" gradient @click="ClickOnFileInput()">
+                {{ this.LoadStrategyText }}
             </vs-button>
-            <!-- <vs-input id="UploadStrategy" style="display: inline-block" type="file" v-model="new_strategy"/> -->
-            <input style="display: inline-block; padding:0px 0px 0px 20px" id="UploadStrategy" type="file">
             <div style="padding:30px 0px 0px 0px">
                 <vs-table striped>
                     <template #thead>
@@ -67,13 +66,19 @@
                                 Is main stategy
                             </vs-th>
                             <vs-th>
+                                Id
+                            </vs-th>
+                            <!--<vs-th>
+                                Name
+                            </vs-th>-->
+                            <vs-th>
                                 Status
                             </vs-th>
                             <vs-th>
-                                Name
+                                Source
                             </vs-th>
                             <vs-th>
-                                Id
+                                Compilation messages
                             </vs-th>
                         </vs-tr>
                     </template>
@@ -89,27 +94,24 @@
                                 </vs-checkbox>
                             </vs-td>
                             <vs-td>
-                                Some status
-                            </vs-td>
-                            <vs-td>
-                                {{ tr.name }}
-                            </vs-td>
-                            <vs-td>
                                 {{ tr.id.substring(0, 3) + '-' + tr.id.substring(3, 6) }}
                             </vs-td>
-
-                            <template #expand>
-                                <div class="con-content">
-                                    <div style="padding:10px 0px 0px 3%">
-                                        <vs-button style="display: inline-block" warn gradient @click="GetComments(tr.id); ShowComments=!ShowComments">
-                                            <i class='bx bx-comment-detail'></i>‌‌ ‌‌ ‌‌Сompiler comments
-                                        </vs-button>
-                                        <vs-button style="display: inline-block; left: 5%" color="rgb(59,222,200)" gradient @click="GetSource(tr.id); ShowSource=!ShowSource">
-                                            <i class='bx bx-code-alt'></i>‌‌ ‌‌ Source
-                                        </vs-button>
-                                    </div>
-                                </div>
-                            </template>
+                            <!--<vs-td>
+                                {{ tr.name }}
+                            </vs-td>-->
+                            <vs-td>
+                                {{ tr.status }}
+                            </vs-td>
+                            <vs-td>
+                                <vs-button style="display: inline-block; left: 3px" color="rgb(59,222,200)" gradient @click="GetSource(tr.id); ShowSource=!ShowSource">
+                                    <i class='bx bx-code-alt'></i>
+                                </vs-button>
+                            </vs-td>
+                            <vs-td>
+                                <vs-button style="display: inline-block; left: 50px" warn gradient @click="GetComments(tr.id); ShowComments=!ShowComments">
+                                    <i class='bx bx-comment-detail'></i>‌‌
+                                </vs-button>
+                            </vs-td>
                         </vs-tr>
                     </template>
                 </vs-table>
@@ -128,7 +130,8 @@
             ShowSource: false,
             ShowComments: false,
             CommentsText: "",
-            SourceText: ""
+            SourceText: "",
+            LoadStrategyText: "Load strategy"
         }),
         mounted() {
             this.GetStrategies();
@@ -150,7 +153,8 @@
                 }
             },
             async GetStrategies() {
-                await this.axios.get("http://127.0.0.1:8080/submission", {
+                await this.axios.get("http://127.0.0.1:8080/submission",
+                {
                     headers: {
                         Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
                     },
@@ -161,11 +165,35 @@
                         for (var j = 0; j < this.strategies.length; j++) {
                             if (this.strategies[j]["id"] == strategies_data[i]['id']) {
                                 not_here = false;
+                                this.strategies[j] = {"id": strategies_data[i]['id'], "main_strategy": false, "name": "SomeName", "status": "SomeStatus"};
                                 break;
                             }
                         }
                         if (not_here) {
-                            this.strategies.push({"id": strategies_data[i]['id'], "main_strategy": false, "name": "SomeName", "email": "some_email"})
+                            this.strategies.push({"id": strategies_data[i]['id'], "main_strategy": false, "name": "SomeName", "status": "SomeStatus"});
+                        }
+                    }
+                    this.GetBestStrategy();
+                }).catch(error => {
+                    if (error.response["data"]["reason"] == "Unauthorized") {
+                        this.$router.push('/');
+                        this.openNotification('top-left', 'danger', 'You need to login');
+                    } else {
+                        this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
+                    }
+                });
+            },
+            async GetBestStrategy() {
+                await this.axios.get("http://127.0.0.1:8080/users/me", 
+                {
+                    headers: {
+                        Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
+                    },
+                }).then(response => {
+                    for (var i = 0; i < this.strategies.length; i++) {
+                        if (response["data"]["bestSubmitID"] == this.strategies[i]["id"]) {
+                            this.strategies[i]["main_strategy"] = true;
+                            break;
                         }
                     }
                 }).catch(error => {
@@ -195,7 +223,19 @@
                     this.strategies[StrategyInd].main_strategy = false;
                 }
             },
+            ClickOnFileInput() {
+                if (this.LoadStrategyText == "Load strategy") {
+                    this.LoadStrategyText = "Submit";
+                    document.getElementById('UploadStrategy').click();
+                } else {
+                    this.LoadStrategyText = "Load strategy";
+                    this.SubmitStrategy()
+                }
+            },
             async SubmitStrategy() {
+                if (document.getElementById("UploadStrategy").files.length == 0) {
+                    return;
+                }
                 try {
                     var formData = new FormData();
                     var strategy = document.getElementById("UploadStrategy").files[0];
@@ -232,11 +272,12 @@
                     this.Pass(response);
                 }).catch(error => {
                     this.Pass(error);
-                    this.openNotification('top-left', 'danger', 'Check if your file is correct');
+                    this.openNotification('top-left', 'danger', 'Try to reaload your page');
                 });
             },
             async GetComments(StrategyId) {
-                await this.axios.get("http://127.0.0.1:8080/submission/comments", {
+                await this.axios.get("http://127.0.0.1:8080/submission/comments",
+                {
                     params: {
                         "id": StrategyId
                     },
@@ -246,10 +287,14 @@
                 }).then(response => {
                     this.Pass(response);
                     this.CommentsText = response["data"];
-                })
+                }).catch(error => {
+                    this.Pass(error);
+                    this.openNotification('top-left', 'danger', 'Try to reaload your page');
+                });
             },
             async GetSource(StrategyId) {
-                await this.axios.get("http://127.0.0.1:8080/submission/source", {
+                await this.axios.get("http://127.0.0.1:8080/submission/source",
+                {
                     params: {
                         "id": StrategyId
                     },
@@ -259,7 +304,10 @@
                 }).then(response => {
                     this.Pass(response);
                     this.SourceText = response["data"];
-                })
+                }).catch(error => {
+                    this.Pass(error);
+                    this.openNotification('top-left', 'danger', 'Try to reaload your page');
+                });
             }
         }
     }
