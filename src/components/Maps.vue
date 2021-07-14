@@ -295,7 +295,7 @@
                 var formData = new FormData();
                 formData.append("map", new File([map_text], "map.txt"));
                 formData.append("name", this.MapName);
-                await this.axios.post("http://127.0.0.1:8080/map/create", 
+                await this.axios.post("http://127.0.0.1:8080/map/create",
                 formData, {
                 headers: {
                         'Content-Type': 'multipart/form-data',

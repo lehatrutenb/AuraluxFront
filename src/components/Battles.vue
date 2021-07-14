@@ -48,66 +48,42 @@
                     </vs-button>
                 </div>
             </vs-dialog>
-            <!--<div style="padding:80px 30px 30px 50px" v-if="page_now == 'strategies'">
-                <div style="padding:30px 0px 0px 0px">
-                    <vs-table striped>
+            <div style="padding:40px 30px 30px 0px" v-if="page_now == 'battles'">
+                <div>
+                    <vs-table striped v-model="selected">
                         <template #thead>
                             <vs-tr>
                                 <vs-th>
-                                    Is main stategy
+                                    Participants
                                 </vs-th>
                                 <vs-th>
-                                    Id
-                                </vs-th>
-                                <vs-th>
-                                    Name
-                                </vs-th>->
-                                <vs-th>
-                                    Status
-                                </vs-th>
-                                <vs-th>
-                                    Source
-                                </vs-th>
-                                <vs-th>
-                                    Compilation messages
+                                    Battle status
                                 </vs-th>
                             </vs-tr>
                         </template>
                         <template #tbody>
                             <vs-tr
                                 :key="i"
-                                v-for="(tr, i) in strategies">
-                                <vs-td checkbox>
-                                    <vs-checkbox @click="CheckMain(i)" v-model="tr.main_strategy" >
-                                        <template #icon>
-                                            <i class='bx bx-crown' ></i>
-                                        </template>
-                                    </vs-checkbox>
+                                v-for="(tr, i) in battles"
+                                :data="tr"
+                                :is-selected="selected == tr">
+                                <vs-td>
+                                    {{ tr.Participants.join(", ") }}
                                 </vs-td>
                                 <vs-td>
-                                    {{ tr.id.substring(0, 3) + '-' + tr.id.substring(3, 6) }}
-                                </vs-td>
-                                <vs-td>
-                                    {{ tr.name }}
-                                </vs-td>->
-                                <vs-td>
-                                    {{ tr.status }}
-                                </vs-td>
-                                <vs-td>
-                                    <vs-button style="display: inline-block; left: 3px" color="rgb(59,222,200)" gradient @click="GetSource(tr.id); ShowSource=!ShowSource">
-                                        <i class='bx bx-code-alt'></i>
-                                    </vs-button>
-                                </vs-td>
-                                <vs-td>
-                                    <vs-button style="display: inline-block; left: 50px" warn gradient @click="GetComments(tr.id); ShowComments=!ShowComments">
-                                        <i class='bx bx-comment-detail'></i>‌‌
-                                    </vs-button>
+                                    {{ tr.isStarted }}
                                 </vs-td>
                             </vs-tr>
                         </template>
                     </vs-table>
+                    <pre>
+                        <div v-if="selected != null">
+                            {{ this.$router.push(`/battle/${selected.id}`) }}
+                            {{ selected = null }}
+                        </div>
+                    </pre>
                 </div>
-            </div> -->
+            </div>
         </div>
     </div>
 </template>
@@ -121,7 +97,8 @@
             strategy_id: "",
             creating_strategies: [],
             creating_strategies_text: [],
-            StrategiesInputMessage: ""
+            StrategiesInputMessage: "",
+            selected: null
         }),
         mounted() {
             this.GetBattles();
@@ -150,21 +127,44 @@
                     },
                 }).then(response => {
                     console.log(response);
-                    /*var battles_data = response["data"];
+                    var battles_data = response["data"];
                     for (var i = 0; i < battles_data.length; i++) {
                         var not_here = true;
                         for (var j = 0; j < this.battles.length; j++) {
-                            if (this.battles[j]["id"] == battles_data[i]['id']) {
+                            if (this.battles[j]["id"] == battles_data[i]["id"]) {
                                 not_here = false;
-                                this.battles[j] = {"id": battles_data[i]['id'], "main_strategy": false, "name": "SomeName", "status": "SomeStatus"};
+                                var participants = [];
+                                for (var k = 0; k < battles_data[i]["participants"].length; k++) {
+                                    var name = "";
+                                    if (battles_data[i]["participants"][k]["username"].length <= 3) {
+                                        name = battles_data[i]["participants"][k]["username"];
+                                    } else {
+                                        name = battles_data[i]["participants"][k]["username"].substring(0, 3);
+                                    }
+                                    participants.push(`${name}[${battles_data[i]["participants"][k]["submissionID"]}]:${battles_data[i]["scores"][k]}`);
+                                }
+                                this.battles[j] = {"Participants": participants, "isStarted": battles_data[i]["isStarted"], "id": battles_data[i]["id"]};
                                 break;
                             }
                         }
                         if (not_here) {
-                            this.battles.push({"id": battles_data[i]['id'], "main_strategy": false, "name": "SomeName", "status": "SomeStatus"});
+                            participants = [];
+                            for (k = 0; k < battles_data[i]["participants"].length; k++) {
+                                name = "";
+                                if (battles_data[i]["participants"][k]["username"].length <= 3) {
+                                    name = battles_data[i]["participants"][k]["username"];
+                                } else {
+                                    name = battles_data[i]["participants"][k]["username"].substring(0, 3);
+                                }
+                                var id = battles_data[i]["participants"][k]["submissionID"];
+                                participants.push(`${name}[${id.substring(0, 3) + '-' + id.substring(3, 6) }]:${battles_data[i]["scores"][k]}`);
+                            }
+                            this.battles.push({"Participants": participants, "isStarted": battles_data[i]["isStarted"], "id": battles_data[i]["id"]});
                         }
-                    }*/
+                    }
+                    console.log(this.battles);
                 }).catch(error => {
+                    console.log(error);
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');
                         this.openNotification('top-left', 'danger', 'You need to login');
@@ -180,7 +180,7 @@
                 if (this.strategy_id.length != 7) {
                     this.StrategiesInputMessage = "Strategy id look like: 123-456"
                 } else {
-                    /*await this.axios.post("http://127.0.0.1:8080/battle/create", // надо чекнуть реально ли стратегия есть
+                    /*await this.axios.post("http://127.0.0.1:8080/battle/check", // надо чекнуть реально ли стратегия есть и взять автора
                     {
                         headers: {
                             Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
@@ -240,6 +240,9 @@
                         this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
                     }
                 });
+            },
+            Selected() {
+                console.log(5);
             }
         }
     }
