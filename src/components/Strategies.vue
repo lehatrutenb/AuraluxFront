@@ -15,9 +15,7 @@
                 Compilation comments
             </h3>
             </template>
-            <div class="con-content">
-                {{ this.CommentsText }}
-            </div>
+            <div class="con-content">{{ this.CommentsText }}</div>
         </vs-dialog>
 
         <vs-dialog v-if="ShowSource" overflow-hidden blur auto-width v-model="ShowSource">
@@ -26,9 +24,7 @@
                 Source
             </h3>
             </template>
-            <code style="white-space: pre-wrap;" class="con-content">
-                {{ this.SourceText }}
-            </code>
+            <code style="white-space: pre-wrap;" class="con-content">{{ this.SourceText }}</code>
         </vs-dialog>
 
         <vs-navbar text-white :color="'rgb(250,128,114)'" v-model="page_now">

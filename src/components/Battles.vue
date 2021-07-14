@@ -42,13 +42,8 @@
                         Add
                     </vs-button>
                     <br/>
-                    <div style="padding: 20px 0px 0px 0px">
-                        Your strategies:
-                    </div>
-                    <div style="padding: 10px 0px 0px 0px; text-align: center; max-width: 250px">
-                        {{ creating_strategies.join(", ") }}
-                    </div>
-                    <vs-button style="top: 15px" gradient @click="RedirectWithParam()">
+                    <div style="padding: 30px 0px 0px 0px; max-width: 250px; white-space: pre-wrap">{{ creating_strategies_text.join("\n") }}</div>
+                    <vs-button style="top: 15px" gradient @click="SubmitBattle()">
                         Create
                     </vs-button>
                 </div>
@@ -125,6 +120,7 @@
             map_creating: false,
             strategy_id: "",
             creating_strategies: [],
+            creating_strategies_text: [],
             StrategiesInputMessage: ""
         }),
         mounted() {
@@ -147,7 +143,7 @@
                 }
             },
             async GetBattles() {
-                await this.axios.get("http://127.0.0.1:8080//battle/all",
+                await this.axios.get("http://127.0.0.1:8080/battle/all",
                 {
                     headers: {
                         Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
@@ -180,11 +176,33 @@
             Pass(Param) {
                 return Param;
             },
-            CheckStrategyAdding() {
+            async CheckStrategyAdding() {
                 if (this.strategy_id.length != 7) {
                     this.StrategiesInputMessage = "Strategy id look like: 123-456"
                 } else {
-                    this.creating_strategies.push(this.strategy_id);
+                    /*await this.axios.post("http://127.0.0.1:8080/battle/create", // надо чекнуть реально ли стратегия есть
+                    {
+                        headers: {
+                            Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
+                        },
+                    }).then(response => {
+                        console.log(response);
+                        this.creating_strategies.push(this.strategy_id.substring(0, 3) + this.strategy_id.substring(4, 7));
+                        this.creating_strategies_text.push(`${response["data"]["author"]}[${this.strategy_id}]`);
+                        this.creating_strategies = [];
+                        //this.$router.push(`/battle/${123}`);
+                    }).catch(error => {
+                        if (error.response["data"]["reason"] == "Unauthorized") {
+                            this.$router.push('/');
+                            this.openNotification('top-left', 'danger', 'You need to login');
+                        } else {
+                            this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
+                        }
+                    });*/
+                    this.creating_strategies.push(this.strategy_id.substring(0, 3) + this.strategy_id.substring(4, 7));
+                    //this.creating_strategies_text.push(`${response["data"]["author"]}[${this.strategy_id}]`);
+                    var response = {"data": {"author": "Alexa"}};
+                    this.creating_strategies_text.push(`${response["data"]["author"]}[${this.strategy_id}]`);
                     this.strategy_id = '';
                     this.StrategiesInputMessage = '';
                 }
@@ -201,11 +219,27 @@
                     }
                 }
             },
-            RedirectWithParam() {
+            async SubmitBattle() {
                 this.strategy_id = "";
-                var strategies = this.creating_strategies;
-                this.creating_strategies = [];
-                //this.$router. got to battle info
+                await this.axios.post("http://127.0.0.1:8080/battle/create",
+                { "submissionIDs": this.creating_strategies },
+                {
+                    headers: {
+                        Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
+                    },
+                }).then(response => {
+                    console.log(response);
+                    
+                    this.creating_strategies = [];
+                    this.$router.push(`/battle/${response["data"]["id"]}`);
+                }).catch(error => {
+                    if (error.response["data"]["reason"] == "Unauthorized") {
+                        this.$router.push('/');
+                        this.openNotification('top-left', 'danger', 'You need to login');
+                    } else {
+                        this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
+                    }
+                });
             }
         }
     }
