@@ -45,48 +45,76 @@
             <vs-button style="display: inline-block" size="xl" gradient v-model="run_creating" @click="run_creating=!run_creating">
                 Create run
             </vs-button>
-            <vs-dialog v-if="run_creating" overflow-hidden blur auto-width v-model="run_creating"> <!--auto-width-->
+            <vs-dialog v-if="run_creating" width="1000px" overflow-hidden blur v-model="run_creating">
                 <template #header>
                 <h3>
                     Run creating
                 </h3>
                 </template>
-                <div style="padding: 0px 30px 30px 30px">
-                    <select required>
-                        <optgroup label="Choose map">
-                            <option value="" disabled selected></option>
-                            <option v-for="tr in map_ids" :ket="tr.id" v-bind:key="tr.id">{{ `${tr.name}[${tr.id}]` }}</option>
-                        </optgroup>
-                    </select>
-                    <vs-button style="top:20px" size="xl" gradient @click="SumbitRun()">
-                        Submit
-                    </vs-button>
+                <div>
+                    <vs-row>
+                        <vs-col :key="index" v-for="col,index in 2" vs-type="flex" vs-justify="center" vs-align="center" w="6">
+                            <div style="padding: 20px 0px 0px 50px" v-if="index == 0">
+                                <select required v-model="map_id" @change="AddMapById()">
+                                    <optgroup label="Choose map">
+                                        <option value="" disabled selected></option>
+                                        <option v-for="tr in map_ids" :ket="tr.id" v-bind:value="tr.id" v-bind:key="tr.id">{{ `${tr.name}[${tr.id}]` }}</option>
+                                    </optgroup>
+                                </select>
+                                <div style="padding: 20px 0px 0px 0px">
+                                    <h4>
+                                        Start planets
+                                    </h4>
+                                    <div style="width:50px">
+                                        <vs-tr
+                                            :key="i"
+                                            v-for="(tr, i) in strategies">
+                                            {{ `${tr.username}[${tr.submissionID}] - ${startPositions[i]}` }}
+                                            <vs-input v-model="startPositions[i]" v-bind:id="'StartPointInput' + i" placeholder="Planet id" />
+                                        </vs-tr>
+                                    </div>
+                                    <vs-button style="top:20px" size="xl" gradient @click="SumbitRun()">
+                                        Submit
+                                    </vs-button>
+                                </div>
+                            </div>
+                            <div v-if="index == 1">
+                                <canvas id="MapCanvas" class="canvas" width="310" height="310"/>
+                            </div>
+                        </vs-col>
+                    </vs-row>
                 </div>
             </vs-dialog>
-            <!--<vs-table striped v-model="selected">
+            <vs-table striped v-model="selected">
                 <template #thead>
                     <vs-tr>
                         <vs-th>
-                            Participants
+                            id
                         </vs-th>
                         <vs-th>
-                            Battle status
+                            map
+                        </vs-th>
+                         <vs-th>
+                            status
                         </vs-th>
                     </vs-tr>
                 </template>
                 <template #tbody>
                     <vs-tr
                         :key="i"
-                        v-for="(tr, i) in runs"
+                        v-for="(tr, i) in runs">
                         <vs-td>
-                            {{ tr.Participants.join(", ") }}
+                            {{ tr.id }}
                         </vs-td>
                         <vs-td>
-                            {{ tr.isStarted }}
+                            {{ tr.map }}
+                        </vs-td>
+                        <vs-td>
+                            {{ tr.status }}
                         </vs-td>
                     </vs-tr>
                 </template>
-            </vs-table>-->
+            </vs-table>
         </div>
     </div>
 </template>
@@ -99,7 +127,10 @@
             run_creating: false,
             map_id: '',
             map_ids: [],
-            creating_map: [] // need to show map during creating run
+            creating_map: [],
+            strategies: [],
+            startPositions: [],
+            value: ''
         }),
         mounted() {
             this.battle_id = this.$route.params.battle_id;
@@ -131,6 +162,11 @@
                     },
                 }).then(response => {
                     console.log(response);
+                    this.strategies = response["data"]["participants"];
+                    this.runs = response["data"]["runs"];
+                    for (var i = 0; i < this.strategies.length; i++) {
+                        this.startPositions.push(null);
+                    }
                 }).catch(error => {
                     console.log(error);
                     if (error.response["data"]["reason"] == "Unauthorized") {
@@ -141,19 +177,29 @@
                     }
                 });
             },
-            async AddRun() {
+            async SumbitRun() {
                 var formData = new FormData();
-                //formData.append("map", new File([map_text], "map.txt"));
+                for (var i = 0; i < this.strategies.length; i++) {
+                    this.startPositions[i] = parseInt(this.startPositions[i]);
+                }
                 formData.append("battleID", this.battle_id);
-                formData.append("gameRunSettings", {"mapID": 5, "startPositions": [1, 2]});
+                formData.append("gameRunSettings", {"mapID": this.map_id, "startPositions": this.startPositions});
+                this.map_id = '';
+                this.run_creating = false;
+                this.creating_map = [];
+                for (i = 0; i < this.strategies.length; i++) {
+                    this.startPositions[i] = null;
+                }
+
                 await this.axios.post("http://127.0.0.1:8080/battle/add_run",
-                {
                     formData,
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                        Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
-                    },
-                }).then(response => {
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
+                        },
+                    }
+                ).then(response => {
                     console.log(response);
                 }).catch(error => {
                     console.log(error);
@@ -201,9 +247,54 @@
             Pass(Param) {
                 return Param;
             },
-            SumbitRun() {
-
-            }
+            DrawMap() {
+                var MapKoef = 3, X_OFFSET = 5;
+                var canvas = document.getElementById("MapCanvas");
+                var ctx = canvas.getContext("2d");
+                ctx.beginPath();
+                ctx.clearRect(X_OFFSET, 0, canvas.width, canvas.height);
+                ctx.stroke();
+                for (var i = 0; i < this.creating_map.length; i++) {
+                    ctx.beginPath();
+                    var x = this.creating_map[i][0] * MapKoef + X_OFFSET, y = this.creating_map[i][1] * MapKoef;
+                    ctx.arc(x, y, 10, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.font = "2px";
+                    if (i < 10) {
+                        ctx.strokeText(i, x - 3, y + 3);
+                    } else if (i < 100) {
+                        ctx.strokeText(i, x - 5, y + 3);
+                    } else {
+                        ctx.strokeText(100, x - 8, y + 3);
+                    }
+                }
+            },
+            async AddMapById() {
+                await this.axios.get("http://127.0.0.1:8080/map",
+                {
+                    params: { id: this.map_id },
+                    headers: {
+                        Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
+                    }
+                }).then(response => {
+                    var map = [], splitted_data = response["data"].split("\n");
+                    for (var i = 0; i < splitted_data.length - 1; i++) {
+                        map.push([parseInt(splitted_data[i].split(' ')[0]), parseInt(splitted_data[i].split(' ')[1])]);
+                    }
+                    this.creating_map = map;
+                    this.DrawMap();
+                }).catch(error => {
+                    if (error.response["data"]["reason"] == "Unauthorized") {
+                        this.$router.push('/');
+                        this.openNotification('top-left', 'danger', 'You need to login');
+                    } else {
+                        this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
+                    }
+                    if (is_last) {
+                        this.MapsFirstDrawTimer = setInterval(this.MapsFirstDrawFunc, 100);
+                    }
+                });
+            },
         }
     }
 </script>
