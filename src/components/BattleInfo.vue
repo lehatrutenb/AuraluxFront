@@ -41,81 +41,94 @@
                 </vs-navbar-item>
             </template>
         </vs-navbar>
-        <div style="padding:80px 30px 30px 50px">
-            <vs-button style="display: inline-block" size="xl" gradient v-model="run_creating" @click="run_creating=!run_creating">
-                Create run
-            </vs-button>
-            <vs-dialog v-if="run_creating" width="1000px" overflow-hidden blur v-model="run_creating">
-                <template #header>
-                <h3>
-                    Run creating
-                </h3>
-                </template>
-                <div>
-                    <vs-row>
-                        <vs-col :key="index" v-for="col,index in 2" vs-type="flex" vs-justify="center" vs-align="center" w="6">
-                            <div style="padding: 20px 0px 0px 50px" v-if="index == 0">
-                                <select required v-model="map_id" @change="AddMapById()">
-                                    <optgroup label="Choose map">
-                                        <option value="" disabled selected></option>
-                                        <option v-for="tr in map_ids" :ket="tr.id" v-bind:value="tr.id" v-bind:key="tr.id">{{ `${tr.name}[${tr.id}]` }}</option>
-                                    </optgroup>
-                                </select>
-                                <div style="padding: 20px 0px 0px 0px">
-                                    <h4>
-                                        Start planets
-                                    </h4>
-                                    <div style="width:50px">
-                                        <vs-tr
-                                            :key="i"
-                                            v-for="(tr, i) in strategies">
-                                            {{ `${tr.username}[${tr.submissionID}] - ${startPositions[i]}` }}
-                                            <vs-input v-model="startPositions[i]" v-bind:id="'StartPointInput' + i" placeholder="Planet id" />
-                                        </vs-tr>
-                                    </div>
-                                    <vs-button style="top:20px" size="xl" gradient @click="SumbitRun()">
-                                        Submit
-                                    </vs-button>
-                                </div>
-                            </div>
-                            <div v-if="index == 1">
-                                <canvas id="MapCanvas" class="canvas" width="310" height="310"/>
-                            </div>
-                        </vs-col>
-                    </vs-row>
-                </div>
-            </vs-dialog>
-            <vs-table striped v-model="selected">
-                <template #thead>
-                    <vs-tr>
-                        <vs-th>
-                            id
-                        </vs-th>
-                        <vs-th>
-                            map
-                        </vs-th>
-                         <vs-th>
-                            status
-                        </vs-th>
-                    </vs-tr>
-                </template>
-                <template #tbody>
-                    <vs-tr
-                        :key="i"
-                        v-for="(tr, i) in runs">
-                        <vs-td>
-                            {{ tr.id }}
-                        </vs-td>
-                        <vs-td>
-                            {{ tr.map }}
-                        </vs-td>
-                        <vs-td>
-                            {{ tr.status }}
-                        </vs-td>
-                    </vs-tr>
-                </template>
-            </vs-table>
+      <div style="padding:80px 30px 30px 50px">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <div style="display: flex; ">
+            <h1 style="margin-right: 15px">Battle with submissions: </h1>
+            <h1>{{ strategies.map ( (element) => element["submissionID"] ).join(", ") }}</h1>
+          </div>
+          <div v-if="battle_started" style="padding: 20px; background-color: forestgreen; border-radius: 10px; vertical-align: center"><h3 style="margin: 0; color: white">
+            Started</h3></div>
+          <div v-if="battle_started === false" style="padding: 20px; background-color: #ff9d5c; border-radius: 10px; vertical-align: center"><h3 style="margin: 0; color: white">
+            Not started</h3></div>
         </div>
+        <vs-button style="margin-bottom: 20px" size="xl" gradient v-model="run_creating" @click="run_creating=!run_creating">
+          Add run
+        </vs-button>
+        <vs-dialog v-if="run_creating" width="1000px" overflow-hidden blur v-model="run_creating">
+          <template #header>
+            <h3>
+              Run creating
+            </h3>
+          </template>
+          <div>
+            <vs-row>
+              <vs-col :key="index" v-for="col,index in 2" vs-type="flex" vs-justify="center" vs-align="center" w="6">
+                <div style="padding: 20px 0px 0px 50px" v-if="index == 0">
+                  <select required v-model="map_id" @change="AddMapById()">
+                    <optgroup label="Choose map">
+                      <option value="" disabled selected></option>
+                      <option v-for="tr in map_ids" :ket="tr.id" v-bind:value="tr.id" v-bind:key="tr.id">{{ `${tr.name}[${tr.id}]` }}</option>
+                    </optgroup>
+                  </select>
+                  <div style="padding: 20px 0px 0px 0px">
+                    <h4>
+                      Start planets
+                    </h4>
+                    <div style="width:50px">
+                      <vs-tr
+                          :key="i"
+                          v-for="(tr, i) in strategies">
+                        {{ `${tr.username}[${tr.submissionID}] - ${startPositions[i]}` }}
+                        <vs-input v-model="startPositions[i]" v-bind:id="'StartPointInput' + i" placeholder="Planet id" />
+                      </vs-tr>
+                    </div>
+                    <vs-button style="top:20px" size="xl" gradient @click="SumbitRun()">
+                      Submit
+                    </vs-button>
+                  </div>
+                </div>
+                <div v-if="index == 1">
+                  <canvas id="MapCanvas" class="canvas" width="310" height="310"/>
+                </div>
+              </vs-col>
+            </vs-row>
+          </div>
+        </vs-dialog>
+        <vs-table striped v-model="selected">
+          <template #thead>
+            <vs-tr>
+              <vs-th>
+                id
+              </vs-th>
+              <vs-th>
+                map
+              </vs-th>
+              <vs-th>
+                status
+              </vs-th>
+            </vs-tr>
+          </template>
+          <template #tbody>
+            <vs-tr
+                :key="i"
+                v-for="(tr, i) in runs">
+              <vs-td>
+                {{ tr.id }}
+              </vs-td>
+              <vs-td>
+                {{ tr.map }}
+              </vs-td>
+              <vs-td>
+                {{ tr.status }}
+              </vs-td>
+            </vs-tr>
+          </template>
+        </vs-table>
+        <vs-button  v-if="battle_started === false" style="margin-bottom: 20px; margin-top: 40px" size="xl" gradient @click="StartBattle">
+          Start battle
+        </vs-button>
+      </div>
     </div>
 </template>
 
@@ -130,14 +143,16 @@
             creating_map: [],
             strategies: [],
             startPositions: [],
-            value: ''
+            value: '',
+            battle_started: null
         }),
-        mounted() {
+        created() {
             this.battle_id = this.$route.params.battle_id;
-            this.GetRuns();
+            this.GetBattleInfo();
             this.GetMaps();
         },
         methods : {
+
             openNotification(position = null, color, text) {
                 this.$vs.notification({
                     sticky: true,
@@ -150,7 +165,29 @@
             CheckRedirecting(RedirectTo) {
                 this.$router.push('/' + RedirectTo);
             },
-            async GetRuns() {
+            async StartBattle() {
+              await this.axios.post("http://127.0.0.1:8080/battle/start",
+                    {
+                      "battleID": this.battle_id
+                    },
+                    {
+                    headers: {
+                      Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
+                    }}).then(response => {
+                console.log(response);
+                this.GetBattleInfo()
+
+              }).catch(error => {
+                console.log(error);
+                if (error.response["data"]["reason"] == "Unauthorized") {
+                  this.$router.push('/');
+                  this.openNotification('top-left', 'danger', 'You need to login');
+                } else {
+                  this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
+                }
+              });
+            },
+            async GetBattleInfo() {
                 console.log(this.battle_id);
                 await this.axios.get("http://127.0.0.1:8080/battle",
                 {
@@ -162,7 +199,9 @@
                     },
                 }).then(response => {
                     console.log(response);
+                    this.battle_started = response["data"]["isStarted"]
                     this.strategies = response["data"]["participants"];
+                    console.log(response["data"]["participants"])
                     this.runs = response["data"]["runs"];
                     for (var i = 0; i < this.strategies.length; i++) {
                         this.startPositions.push(null);
@@ -177,31 +216,33 @@
                     }
                 });
             },
-            async SumbitRun() {
-                var formData = new FormData();
-                for (var i = 0; i < this.strategies.length; i++) {
-                    this.startPositions[i] = parseInt(this.startPositions[i]);
-                }
-                formData.append("battleID", this.battle_id);
-                formData.append("gameRunSettings", {"mapID": this.map_id, "startPositions": this.startPositions});
-                this.map_id = '';
-                this.run_creating = false;
-                this.creating_map = [];
-                for (i = 0; i < this.strategies.length; i++) {
-                    this.startPositions[i] = null;
-                }
+            async SumbitRun()  {
 
                 await this.axios.post("http://127.0.0.1:8080/battle/add_run",
-                    formData,
+                    {battleID :  this.battle_id,
+                          gameRunSettings: {mapID: this.map_id, startPositions: this.startPositions.map((position) => parseInt(position))},
+                          },
                     {
                         headers: {
-                            'Content-Type': 'multipart/form-data',
+                            'Content-Type': 'application/json',
                             Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
                         },
                     }
                 ).then(response => {
+                  for (var i = 0; i < this.strategies.length; i++) {
+                    this.startPositions[i] = null;
+                  }
+                  this.map_id = '';
+                  this.run_creating = false;
+                  this.creating_map = [];
                     console.log(response);
                 }).catch(error => {
+                  this.map_id = '';
+                  this.run_creating = false;
+                  this.creating_map = [];
+                  for (var i = 0; i < this.strategies.length; i++) {
+                    this.startPositions[i] = null;
+                  }
                     console.log(error);
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');

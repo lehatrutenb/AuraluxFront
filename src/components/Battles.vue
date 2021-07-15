@@ -42,7 +42,7 @@
                         Add
                     </vs-button>
                     <br/>
-                    <div style="padding: 30px 0px 0px 0px; max-width: 250px; white-space: pre-wrap">{{ creating_strategies_text.join("\n") }}</div>
+                    <div style="padding: 5px 0px 0px 0px; max-width: 250px; white-space: pre-wrap"><p v-for="(stategy, i) in creating_strategies_text" :key="i" style="margin-top: 5px; margin-left: 5px">{{ stategy }}</p></div>
                     <vs-button style="top: 15px" gradient @click="SubmitBattle()">
                         Create
                     </vs-button>
@@ -56,7 +56,7 @@
                                 <vs-th>
                                     Participants
                                 </vs-th>
-                                <vs-th>
+                                <vs-th style="width: 100px">
                                     Battle status
                                 </vs-th>
                             </vs-tr>
@@ -68,10 +68,14 @@
                                 :data="tr"
                                 :is-selected="selected == tr">
                                 <vs-td>
-                                    {{ tr.Participants.join(", ") }}
+                                    <div style="display: flex; justify-content: space-around">
+                                      <p style="font-size: 20px" v-for="(part, j) in tr.Participants" :key="j">{{part}}</p>
+                                    </div>
                                 </vs-td>
-                                <vs-td>
-                                    {{ tr.isStarted }}
+
+                                <vs-td style="width: 100px">
+                                    <div style="padding: 5px;background-color: #ff9d5c; width: 100px; text-align: center; border-radius: 5px" v-if="!tr.isStarted">Start game</div>
+                                    <div style="padding: 5px;background-color: seagreen; color: white; width: 100px; text-align: center; border-radius: 5px" v-if="tr.isStarted">Started</div>
                                 </vs-td>
                             </vs-tr>
                         </template>
@@ -100,7 +104,7 @@
             StrategiesInputMessage: "",
             selected: null
         }),
-        mounted() {
+        created() {
             this.GetBattles();
         },
         methods: {
@@ -180,7 +184,7 @@
                 if (this.strategy_id.length != 7) {
                     this.StrategiesInputMessage = "Strategy id look like: 123-456"
                 } else {
-                    /*await this.axios.post("http://127.0.0.1:8080/battle/check", // надо чекнуть реально ли стратегия есть и взять автора
+                    await this.axios.get(`http://127.0.0.1:8080/submission/author?id=${this.strategy_id.substring(0, 3) + this.strategy_id.substring(4, 7)}`, // надо чекнуть реально ли стратегия есть и взять автора
                     {
                         headers: {
                             Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
@@ -188,21 +192,22 @@
                     }).then(response => {
                         console.log(response);
                         this.creating_strategies.push(this.strategy_id.substring(0, 3) + this.strategy_id.substring(4, 7));
-                        this.creating_strategies_text.push(`${response["data"]["author"]}[${this.strategy_id}]`);
-                        this.creating_strategies = [];
+                        this.creating_strategies_text.push(`${response["data"]}[${this.strategy_id}]`);
                         //this.$router.push(`/battle/${123}`);
                     }).catch(error => {
+                      console.log(error)
                         if (error.response["data"]["reason"] == "Unauthorized") {
                             this.$router.push('/');
                             this.openNotification('top-left', 'danger', 'You need to login');
-                        } else {
-                            this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
+                        } else if (error.response["data"]["reason"] == "Not Found") {
+                            this.openNotification('top-left', 'danger', 'You typed non-existent submission id');
                         }
-                    });*/
-                    this.creating_strategies.push(this.strategy_id.substring(0, 3) + this.strategy_id.substring(4, 7));
-                    //this.creating_strategies_text.push(`${response["data"]["author"]}[${this.strategy_id}]`);
-                    var response = {"data": {"author": "Alexa"}};
-                    this.creating_strategies_text.push(`${response["data"]["author"]}[${this.strategy_id}]`);
+                        else {
+                          this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
+                        }
+
+                    });
+
                     this.strategy_id = '';
                     this.StrategiesInputMessage = '';
                 }
@@ -221,6 +226,7 @@
             },
             async SubmitBattle() {
                 this.strategy_id = "";
+                console.log(this.creating_strategies)
                 await this.axios.post("http://127.0.0.1:8080/battle/create",
                 { "submissionIDs": this.creating_strategies },
                 {
@@ -231,7 +237,7 @@
                     console.log(response);
                     
                     this.creating_strategies = [];
-                    this.$router.push(`/battle/${response["data"]["id"]}`);
+
                 }).catch(error => {
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');
