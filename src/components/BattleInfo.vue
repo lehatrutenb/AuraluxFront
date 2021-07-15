@@ -98,8 +98,11 @@
         <vs-table striped v-model="selected">
           <template #thead>
             <vs-tr>
-              <vs-th>
+              <vs-th style="width: 10px">
                 id
+              </vs-th>
+              <vs-th v-for="(strategy, i) in strategies" :key="i">
+                {{strategy["submissionID"]}}
               </vs-th>
               <vs-th>
                 map
@@ -115,6 +118,9 @@
                 v-for="(tr, i) in runs">
               <vs-td>
                 {{ tr.id }}
+              </vs-td>
+              <vs-td v-for="(score, j) in tr.scores" :key="j">
+                {{score}}
               </vs-td>
               <vs-td>
                 {{ tr.map }}
