@@ -54,11 +54,11 @@
             <vs-button style="display: inline-block" size="xl" gradient @click="ClickOnFileInput()">
                 {{ this.LoadStrategyText }}
             </vs-button>
-            <div style="padding:30px 0px 0px 0px">
+            <div style="padding:30px 0px 0px 0px; width: 1000px">
                 <vs-table striped>
                     <template #thead>
                         <vs-tr>
-                            <vs-th>
+                            <vs-th style="width: 23px">
                                 Is main stategy
                             </vs-th>
                             <vs-th>
@@ -71,19 +71,16 @@
                                 Status
                             </vs-th>
                             <vs-th>
-                                Source
-                            </vs-th>
-                            <vs-th>
-                                Compilation messages
+                                About source
                             </vs-th>
                         </vs-tr>
                     </template>
                     <template #tbody>
                         <vs-tr
                             :key="i"
-                            v-for="(tr, i) in strategies">
+                            v-for="(tr, i) in $vs.getPage(strategies, page, max)">
                             <vs-td checkbox>
-                                <vs-checkbox @click="CheckMain(i)" v-model="tr.main_strategy" >
+                                <vs-checkbox @click="CheckMain(i)" v-model="tr.main_strategy" style="width: 23px">
                                     <template #icon>
                                         <i class='bx bx-crown' ></i>
                                     </template>
@@ -102,14 +99,16 @@
                                 <vs-button style="display: inline-block; left: 3px" color="rgb(59,222,200)" gradient @click="GetSource(tr.id); ShowSource=!ShowSource">
                                     <i class='bx bx-code-alt'></i>
                                 </vs-button>
-                            </vs-td>
-                            <vs-td>
-                                <vs-button style="display: inline-block; left: 50px" warn gradient @click="GetComments(tr.id); ShowComments=!ShowComments">
-                                    <i class='bx bx-comment-detail'></i>‌‌
+                                <vs-button style="display: inline-block; margin-left: 30px" warn gradient @click="GetComments(tr.id); ShowComments=!ShowComments">
+                                  <i class='bx bx-comment-detail'></i>‌‌
                                 </vs-button>
                             </vs-td>
+
                         </vs-tr>
                     </template>
+                  <template #footer>
+                    <vs-pagination v-model="page" :length="$vs.getLength(strategies, max)" />
+                  </template>
                 </vs-table>
             </div>
         </div>
@@ -127,12 +126,36 @@
             ShowComments: false,
             CommentsText: "",
             SourceText: "",
-            LoadStrategyText: "Load strategy"
+            LoadStrategyText: "Load strategy",
+            page: 1,
+            max: 10,
+            wsState: 0
         }),
         mounted() {
+            this.initWebSockets();
             this.GetStrategies();
         },
         methods: {
+            initWebSockets() {
+              const socket = new WebSocket('ws://localhost:8080/submission/ws');
+              let token = this.$cookies.get("SessionToken")
+              socket.addEventListener('open', function () {
+                socket.send(token);
+              });
+              socket.addEventListener('message', (event) => {
+                if (this.wsState === 0) {
+                  if (event.data !== "AUTH_SUCCESS") {
+                    this.openNotification('top-left', 'danger', 'Failed to connect websocket');
+                  }
+                  else {
+                    this.wsState = 1
+                  }
+                } else if (this.wsState === 1) {
+                  const [id, status] = event.data.split(' ')
+                  this.strategies.find(strategy => strategy.id === id).status = this.getStatus(status);
+                }
+              });
+            },
             openNotification(position = null, color, text) {
                 this.$vs.notification({
                     sticky: true,
@@ -148,6 +171,22 @@
                     this.$router.push(RedirectTo);
                 }
             },
+
+            getStatus(statusCode) {
+              if (statusCode === "ok") {
+                return "OK"
+              }
+              if (statusCode === "compilation_error") {
+                return "Compilation Error"
+              }
+              if (statusCode === "queue") {
+                return "In queue"
+              }
+              if (statusCode === "compiling") {
+                return "Compiling"
+              }
+              return "Server Erorr"
+            },
             async GetStrategies() {
                 await this.axios.get("http://127.0.0.1:8080/submission",
                 {
@@ -161,12 +200,12 @@
                         for (var j = 0; j < this.strategies.length; j++) {
                             if (this.strategies[j]["id"] == strategies_data[i]['id']) {
                                 not_here = false;
-                                this.strategies[j] = {"id": strategies_data[i]['id'], "main_strategy": false, "name": "SomeName", "status": "SomeStatus"};
+                                this.strategies[j] = {"id": strategies_data[i]['id'], "main_strategy": false, "name": "SomeName", "status": this.getStatus(strategies_data[i]['status'])};
                                 break;
                             }
                         }
                         if (not_here) {
-                            this.strategies.push({"id": strategies_data[i]['id'], "main_strategy": false, "name": "SomeName", "status": "SomeStatus"});
+                            this.strategies.push({"id": strategies_data[i]['id'], "main_strategy": false, "name": "SomeName", "status":  this.getStatus(strategies_data[i]['status'])});
                         }
                     }
                     this.GetBestStrategy();
@@ -178,9 +217,10 @@
                         this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
                     }
                 });
+                this.strategies = this.strategies.reverse();
             },
             async GetBestStrategy() {
-                await this.axios.get("http://127.0.0.1:8080/users/me", 
+                await this.axios.get("http://127.0.0.1:8080/users/me",
                 {
                     headers: {
                         Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
@@ -242,7 +282,7 @@
                     pass(error);
                     this.openNotification('top-left', 'danger', 'Check if your file is correct');
                 }
-                await this.axios.post("http://127.0.0.1:8080/submission/submit", 
+                await this.axios.post("http://127.0.0.1:8080/submission/submit",
                 formData, {
                 headers: {
                         'Content-Type': 'multipart/form-data',
