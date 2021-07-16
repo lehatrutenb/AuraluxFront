@@ -339,7 +339,7 @@
 </script>
 
 
-<style>
+<style scoped>
     .dropbtn {
         background:orange;
         background-image: url("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Windows_Settings_app_icon.png/50px-Windows_Settings_app_icon.png");
