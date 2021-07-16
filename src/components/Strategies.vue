@@ -163,7 +163,7 @@
                     position,
                     title: 'Something went wrong',
                     text: text
-                })
+                });
             },
             CheckRedirecting(RedirectTo) {
                 if (this.page_now != RedirectTo) {

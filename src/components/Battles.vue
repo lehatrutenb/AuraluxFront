@@ -74,8 +74,8 @@
                                 </vs-td>
 
                                 <vs-td style="width: 100px">
-                                    <div style="padding: 5px;background-color: #ff9d5c; width: 100px; text-align: center; border-radius: 5px" v-if="!tr.isStarted">Start game</div>
-                                    <div style="padding: 5px;background-color: seagreen; color: white; width: 100px; text-align: center; border-radius: 5px" v-if="tr.isStarted">Started</div>
+                                    <div style="padding: 5px; background-color: #ff9d5c; width: 100px; text-align: center; border-radius: 5px" v-if="!tr.isStarted">Start game</div>
+                                    <div style="padding: 5px; background-color: seagreen; color: white; width: 100px; text-align: center; border-radius: 5px" v-if="tr.isStarted">Started</div>
                                 </vs-td>
                             </vs-tr>
                         </template>

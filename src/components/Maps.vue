@@ -109,7 +109,7 @@
                     position,
                     title: 'Something went wrong',
                     text: text
-                })
+                });
             },
             Pass(Param) {
                 return Param;

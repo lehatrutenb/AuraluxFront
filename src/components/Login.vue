@@ -119,7 +119,7 @@
                     position,
                     title: 'Something went wrong',
                     text: 'Check corectness of your login and password'
-                })
+                });
             },
             post_req: async function() {
                 await this.axios.post("http://127.0.0.1:8080/users/login", {remember: this.remember}, {

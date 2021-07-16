@@ -95,7 +95,7 @@
             </vs-row>
           </div>
         </vs-dialog>
-        <vs-table striped v-model="selected">
+        <vs-table striped>
           <template #thead>
             <vs-tr>
               <vs-th style="width: 10px">
@@ -109,6 +109,9 @@
               </vs-th>
               <vs-th>
                 status
+              </vs-th>
+              <vs-th>
+                view
               </vs-th>
             </vs-tr>
           </template>
@@ -127,6 +130,11 @@
               </vs-td>
               <vs-td>
                 {{ tr.status }}
+              </vs-td>
+              <vs-td>
+                  <vs-button style="display: inline-block; left: 3px" color="rgb(222,59,94)" gradient @click="CheckRedirecting(`battle/${battle_id}/${tr.id}`)">
+                      <i class='bx bx-movie'></i>
+                  </vs-button>
               </vs-td>
             </vs-tr>
           </template>
@@ -241,7 +249,8 @@
                   this.map_id = '';
                   this.run_creating = false;
                   this.creating_map = [];
-                    console.log(response);
+                  console.log(response);
+                  this.GetBattleInfo();
                 }).catch(error => {
                   this.map_id = '';
                   this.run_creating = false;
@@ -266,10 +275,6 @@
                 }).then(response => {
                     var map_data = response["data"];
                     for (var i = 0; i < map_data.length; i++) {
-                        var is_last = false;
-                        if (i == map_data.length - 1) {
-                            is_last = true;
-                        }
                         var not_here = true;
                         for (var j = 0; j < this.map_ids.length; j++) {
                             if (this.map_ids[j]["id"] == map_data[i]["id"]) {
@@ -336,9 +341,6 @@
                         this.openNotification('top-left', 'danger', 'You need to login');
                     } else {
                         this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
-                    }
-                    if (is_last) {
-                        this.MapsFirstDrawTimer = setInterval(this.MapsFirstDrawFunc, 100);
                     }
                 });
             },
