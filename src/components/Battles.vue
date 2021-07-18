@@ -67,13 +67,13 @@
                                 v-for="(tr, i) in battles"
                                 :data="tr"
                                 :is-selected="selected == tr">
-                                <vs-td>
+                                <vs-td @click="selected = tr">
                                     <div style="display: flex; justify-content: space-around">
                                       <p style="font-size: 20px" v-for="(part, j) in tr.Participants" :key="j">{{part}}</p>
                                     </div>
                                 </vs-td>
 
-                                <vs-td style="width: 100px">
+                                <vs-td @click="selected = tr" style="width: 100px">
                                     <div style="padding: 5px; background-color: #ff9d5c; width: 100px; text-align: center; border-radius: 5px" v-if="!tr.isStarted">Start game</div>
                                     <div style="padding: 5px; background-color: seagreen; color: white; width: 100px; text-align: center; border-radius: 5px" v-if="tr.isStarted">Started</div>
                                 </vs-td>
@@ -166,9 +166,7 @@
                             this.battles.push({"Participants": participants, "isStarted": battles_data[i]["isStarted"], "id": battles_data[i]["id"]});
                         }
                     }
-                    console.log(this.battles);
                 }).catch(error => {
-                    console.log(error);
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');
                         this.openNotification('top-left', 'danger', 'You need to login');
@@ -190,12 +188,9 @@
                             Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
                         },
                     }).then(response => {
-                        console.log(response);
                         this.creating_strategies.push(this.strategy_id.substring(0, 3) + this.strategy_id.substring(4, 7));
                         this.creating_strategies_text.push(`${response["data"]}[${this.strategy_id}]`);
-                        //this.$router.push(`/battle/${123}`);
                     }).catch(error => {
-                      console.log(error)
                         if (error.response["data"]["reason"] == "Unauthorized") {
                             this.$router.push('/');
                             this.openNotification('top-left', 'danger', 'You need to login');
@@ -226,7 +221,6 @@
             },
             async SubmitBattle() {
                 this.strategy_id = "";
-                console.log(this.creating_strategies)
                 await this.axios.post("http://127.0.0.1:8080/battle/create",
                 { "submissionIDs": this.creating_strategies },
                 {
@@ -234,10 +228,8 @@
                         Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
                     },
                 }).then(response => {
-                    console.log(response);
-                    
+                    this.Pass(response);
                     this.creating_strategies = [];
-
                 }).catch(error => {
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');
@@ -248,7 +240,7 @@
                 });
             },
             Selected() {
-                console.log(5);
+                this.Pass(1);
             }
         }
     }

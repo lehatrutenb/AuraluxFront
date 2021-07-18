@@ -24,15 +24,10 @@
         </vs-navbar>
         <br/>
         <br/>
-        <br/>
         <div>
-            <canvas id="myCanvas" class="canvas" width="1" height="1"/>
+            <canvas id="myCanvas" class="canvas" width="700" height="700"/>
         </div>
-        <input id="UploadStrategy" type="file" hidden>
-        <vs-button style="display: inline-block" size="xl" gradient @click="ClickOnFileInput()">
-            {{ this.LoadStrategyText }}
-        </vs-button>
-        <div class="input-set">
+        <div style="padding: 30px" class="input-set">
             <label id="SpeedInput">Скорость игры: 1</label><br>
             <input id="GameSpeed" value="1" type="range" class="SpeedRange" step="1" min="000" max="100">
         </div>
@@ -46,7 +41,6 @@
             run_id: null,
             planets: [],
             PlanetsCount: 0,
-            PlayersCount: 0,
             lines: [],
             game_not_stopped: true,
             groups_ship: [],
@@ -54,12 +48,13 @@
             planet_state: [],
             distance: [],
             MaxX: 0,
-            MaxY: 0,
+            MaxY: 1,
             Koef: 1,
             LineNow: 0,
             Run: 0,
             TryToSetDataInterval: null,
-            LoadStrategyText: "Load strategy"
+            height: window.innerHeight,
+            width: window.innerWidth
         }),
         mounted() {
             this.battle_id = this.$route.params.battle_id;
@@ -68,15 +63,6 @@
             this.TryToSetDataInterval = setInterval(this.TryToSetData(), 100);
         },
         methods : {
-            ClickOnFileInput() {
-                if (this.LoadStrategyText == "Load strategy") {
-                    this.LoadStrategyText = "Submit";
-                    document.getElementById('UploadStrategy').click();
-                } else {
-                    this.LoadStrategyText = "Load strategy";
-                    this.readFile();
-                }
-            },
             openNotification(position = null, color, text) {
                 this.$vs.notification({
                     sticky: true,
@@ -99,9 +85,9 @@
                         Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
                     },
                 }).then(response => {
-                    console.log(response);
+                    this.lines = response["data"].split("\n");
+                    this.parseFile();
                 }).catch(error => {
-                    console.log(error)
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');
                         this.openNotification('top-left', 'danger', 'You need to login');
@@ -111,7 +97,6 @@
                     else {
                         this.openNotification('top-left', 'danger', 'Check if your internet is fast enough and try again');
                     }
-
                 });
             },
             TimeNow() {
@@ -130,13 +115,10 @@
                     }, false);
                 }
             },
-            readFile() {
-                input = document.getElementById("UploadStrategy").files[0]
-                this.lines = reader.result.split(/\r?\n/);
-                let splitted = this.lines[this.LineNow].split(' ');
+            parseFile() {
+                let splitted = this.lines[this.LineNow];
                 this.LineNow++;
-                this.PlanetsCount = parseInt(splitted[0]);
-                this.PlayersCount = parseInt(splitted[1]);
+                this.PlanetsCount = parseInt(splitted);
                 this.planet_state = new Array(this.PlanetsCount);
                 this.distance = new Array(this.PlanetsCount);
                 for (var i = 0; i < this.PlanetsCount; i++) {
@@ -171,54 +153,9 @@
                     }
                 }
                 this.Run = setInterval(this.Visualize, 100 - document.getElementById('GameSpeed').value);
-                /*let file = input.files[0];
-                let reader = new FileReader();
-                reader.readAsText(file);
-                reader.onload = function() {
-                    this.lines = reader.result.split(/\r?\n/);
-                    let splitted = this.lines[this.LineNow].split(' ');
-                    this.LineNow++;
-                    this.PlanetsCount = parseInt(splitted[0]);
-                    this.PlayersCount = parseInt(splitted[1]);
-                    this.planet_state = new Array(this.PlanetsCount);
-                    this.distance = new Array(this.PlanetsCount);
-                    for (var i = 0; i < this.PlanetsCount; i++) {
-                        splitted = this.lines[this.LineNow].split(' ');
-                        this.LineNow++;
-                        this.planets.push([parseInt(splitted[0]), parseInt(splitted[1])]);
-                    }
-                    for (i = 0; i < this.PlanetsCount; i++)
-                    {
-                        this.planets[i][0] += 5;
-                        this.planets[i][1] += 5;
-                    }
-                    for (i = 0; i < this.PlanetsCount; i++)
-                    {
-                        this.MaxX = Math.max(this.MaxX, this.planets[i][0]);
-                        this.MaxY = Math.max(this.MaxY, this.planets[i][1])
-                    }
-                    this.Koef = (this.height - 100) / this.MaxY;
-                    for (i = 0; i < this.PlanetsCount; i++)
-                    {
-                        this.planets[i][0] *= this.Koef;
-                        this.planets[i][1] *= this.Koef;
-                    }
-                    for (i = 0; i < this.PlanetsCount; i++)
-                    {
-                        this.distance[i] = new Array(this.PlanetsCount);
-                        for (var j = 0; j < this.PlanetsCount; j++)
-                        {
-                            var x = this.planets[i][0] - this.planets[j][0];
-                            var y = this.planets[i][1] - this.planets[j][1];
-                            this.distance[i][j] = Math.round(Math.sqrt(x * x + y * y));
-                        }
-                    }
-                    this.Run = setInterval(this.Visualize, 100 - document.getElementById('GameSpeed').value);
-                };*/
             }, ReadEvent() {
                 var m = parseInt(this.lines[this.LineNow]);
                 this.LineNow++;
-
                 if (m == -1)
                 {
                     this.game_not_stopped = false;
@@ -229,7 +166,6 @@
                 {
                     var splitted = this.lines[this.LineNow].split(' ');
                     this.LineNow++;
-
                     PlayerId = parseInt(splitted[0]);
                     FromPlanetId = parseInt(splitted[1]);
                     ToPlanetId = parseInt(splitted[2]);
@@ -241,7 +177,6 @@
                 {
                     splitted = this.lines[this.LineNow].split(' ');
                     this.LineNow++;
-
                     PlayerId = parseInt(splitted[0]);
                     ShipCount = parseInt(splitted[1]);
                     Level = parseInt(splitted[2]);
@@ -262,7 +197,7 @@
                         groups_ship_new.push([FromPlanetId, ToPlanetId, Count, time + 4, PlayerId]);
                     }
                 }
-                this.roups_ship = groups_ship_new;
+                this.groups_ship = groups_ship_new;
             }, coord_move(from, to, time)
             {
                 var from_c = this.planets[from];
@@ -348,16 +283,13 @@
         border-radius:100px;
         cursor: pointer;
       }
-
       .dropbtn:hover {
         background-color:rgb(218, 147, 16);
       }
-
       .dropdown {
         position: relative;
         display: inline-block;
       }
-
       .dropdown-content {
         display: none;
         position: absolute;
@@ -365,17 +297,14 @@
         overflow: auto;
         z-index: 1;
       }
-
       .dropdown-content a {
         color: black;
         padding: 12px 16px;
         text-decoration: none;
         display: block;
       }
-
       .dropdown a:hover {background-color: #ddd;}
       .show {display: block;}
-
     #animate {
         width: 50px;
         height: 50px;
@@ -391,7 +320,6 @@
         cursor: pointer;
         display: none;
     }
-
     .add_point {
         position: absolute;
         border-radius: 50px;
@@ -400,7 +328,6 @@
         color: green;
     }
     .show {display: block;}
-
     .date {
         display: none;
         position: absolute;
