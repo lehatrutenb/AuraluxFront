@@ -62,6 +62,9 @@
             this.GetLogs();
             this.TryToSetDataInterval = setInterval(this.TryToSetData(), 100);
         },
+        created() {
+            document.title = "Auralux";
+        },
         methods : {
             openNotification(position = null, color, text) {
                 this.$vs.notification({

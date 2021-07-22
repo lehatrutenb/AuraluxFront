@@ -111,6 +111,9 @@
             textarea: '',
             ErrorMsg: false
         }),
+        created() {
+            document.title = "Auralux";
+        },
         methods: {
             openNotification(position = null, color) {
                 this.$vs.notification({

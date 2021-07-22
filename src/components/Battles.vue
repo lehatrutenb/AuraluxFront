@@ -105,6 +105,7 @@
             selected: null
         }),
         created() {
+            document.title = "Auralux";
             this.GetBattles();
         },
         methods: {

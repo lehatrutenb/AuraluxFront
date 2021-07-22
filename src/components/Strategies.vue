@@ -135,6 +135,9 @@
             this.initWebSockets();
             this.GetStrategies();
         },
+        created() {
+            document.title = "Auralux";
+        },
         methods: {
             initWebSockets() {
               const socket = new WebSocket('ws://localhost:8080/submission/ws');

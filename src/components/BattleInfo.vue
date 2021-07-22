@@ -161,12 +161,12 @@
             battle_started: null
         }),
         created() {
+            document.title = "Auralux";
             this.battle_id = this.$route.params.battle_id;
             this.GetBattleInfo();
             this.GetMaps();
         },
         methods : {
-
             openNotification(position = null, color, text) {
                 this.$vs.notification({
                     sticky: true,

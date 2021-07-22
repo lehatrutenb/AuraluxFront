@@ -92,6 +92,9 @@
                 MapsFirstDrawTimer: null,
             }
         },
+        created() {
+            document.title = "Auralux";
+        },
         mounted() {
             this.GetMaps();
         },

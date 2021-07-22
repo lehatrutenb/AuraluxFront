@@ -32,6 +32,9 @@
         data:() => ({
             page_now: 'null',
         }),
+        created() {
+            document.title = "Auralux";
+        },
         methods: {
             CheckRedirecting(RedirectTo) {
                 if (this.page_now != RedirectTo) {
