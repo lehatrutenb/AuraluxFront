@@ -53,8 +53,8 @@
             LineNow: 0,
             Run: 0,
             TryToSetDataInterval: null,
-            height: window.innerHeight,
-            width: window.innerWidth
+            height: 700,
+            width: 700
         }),
         mounted() {
             this.battle_id = this.$route.params.battle_id;
