@@ -43,7 +43,7 @@
                     </vs-button>
                     <br/>
                     <div style="padding: 5px 0px 0px 0px; max-width: 250px; white-space: pre-wrap"><p v-for="(stategy, i) in creating_strategies_text" :key="i" style="margin-top: 5px; margin-left: 5px">{{ stategy }}</p></div>
-                    <vs-button style="top: 15px" gradient @click="SubmitBattle()">
+                    <vs-button style="top: 15px" gradient @click="SubmitBattle(); map_creating=!map_creating">
                         Create
                     </vs-button>
                 </div>
