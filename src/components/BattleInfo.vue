@@ -312,12 +312,12 @@
                     ctx.arc(x, y, 10, 0, 2 * Math.PI);
                     ctx.stroke();
                     ctx.font = "2px";
-                    if (i < 10) {
-                        ctx.strokeText(i, x - 3, y + 3);
-                    } else if (i < 100) {
-                        ctx.strokeText(i, x - 5, y + 3);
+                    if (i + 1 < 10) {
+                        ctx.strokeText(i + 1, x - 3, y + 3);
+                    } else if (i + 1 < 100) {
+                        ctx.strokeText(i + 1, x - 5, y + 3);
                     } else {
-                        ctx.strokeText(100, x - 8, y + 3);
+                        ctx.strokeText(i + 1, x - 8, y + 3);
                     }
                 }
             },
