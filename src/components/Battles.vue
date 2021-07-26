@@ -131,7 +131,6 @@
                         Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
                     },
                 }).then(response => {
-                    console.log(response);
                     var battles_data = response["data"];
                     for (var i = 0; i < battles_data.length; i++) {
                         var not_here = true;
@@ -167,6 +166,7 @@
                             this.battles.push({"Participants": participants, "isStarted": battles_data[i]["isStarted"], "id": battles_data[i]["id"]});
                         }
                     }
+                    this.battles.reverse();
                 }).catch(error => {
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');
@@ -229,8 +229,20 @@
                         Authorization: `Bearer ${ this.$cookies.get("SessionToken") }`
                     },
                 }).then(response => {
-                    this.Pass(response);
+                    var respone_data = response["data"]
                     this.creating_strategies = [];
+                    var participants = [];
+                    for (var k = 0; k < respone_data["participants"].length; k++) {
+                        var name = "";
+                        if (respone_data["participants"][k]["username"].length <= 3) {
+                            name = respone_data["participants"][k]["username"];
+                        } else {
+                            name = respone_data["participants"][k]["username"].substring(0, 3);
+                        }
+                        var id = respone_data["participants"][k]["submissionID"];
+                        participants.push(`${name}[${id.substring(0, 3) + '-' + id.substring(3, 6) }]`);
+                    }
+                    this.battles.unshift({"Participants": participants, "isStarted": false, "id": respone_data["id"]});
                 }).catch(error => {
                     if (error.response["data"]["reason"] == "Unauthorized") {
                         this.$router.push('/');

@@ -195,9 +195,9 @@
                     Count = this.groups_ship[i][2];
                     time = this.groups_ship[i][3];
                     PlayerId = this.groups_ship[i][4];
-                    if (time + 3.9 < this.distance[FromPlanetId][ToPlanetId])
+                    if (time + 3.6 < this.distance[FromPlanetId][ToPlanetId])
                     {
-                        groups_ship_new.push([FromPlanetId, ToPlanetId, Count, time + 3.9, PlayerId]);
+                        groups_ship_new.push([FromPlanetId, ToPlanetId, Count, time + 3.6, PlayerId]);
                     }
                 }
                 this.groups_ship = groups_ship_new;
